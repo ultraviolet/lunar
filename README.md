@@ -1,2 +1,2 @@
 # lunar
-Ubuntu Hardening Script for CyPat
+Ubuntu Hardening Script for CyberPariot
