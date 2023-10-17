@@ -100,7 +100,7 @@ ssh(){
 							do
 								sed -i "/^AllowUser/ s/$/ $x /" /etc/ssh/sshd_config
 							done
-				pause
+			
                 	fi
         else
                 	read -p "Does SSH need to be installed? [y/n]: " a
