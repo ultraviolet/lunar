@@ -62,22 +62,20 @@ done
 }
 
 ufw(){
-apt update
-apt install -y ufw
-ufw enable
-ufw status
+sudo apt update
+sudo apt install -y ufw
+sudo ufw enable
+sudo ufw status
 echo "UFW has been enabled."
 }
 
 logo(){
-echo "	       //            __      ___      __     		"
+echo "         //            __      ___      __     		"
 echo "        // //   / / //   ) ) //   ) ) //  ) )       "
 echo "       // //   / / //   / / //   / / //             "
 echo "      // ((___( ( //   / / ((___( ( //              "
 }
 
-do
 	logo
 	ufw
 	users
-done
