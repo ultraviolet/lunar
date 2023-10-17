@@ -120,7 +120,7 @@ ssh(){
 							do
 								sed -i "/^AllowUser/ s/$/ $x /" /etc/ssh/sshd_config
 							done
-				pause
+				
 			fi
         	fi
 }
