@@ -224,6 +224,57 @@ sudo apt update
 echo "Ubuntu update settings have been hardened."
 }
 
+shadow() {
+	chmod 640 /etc/shadow
+	ls -l /etc/shadow
+	echo "Shadow has been secured."
+}
+
+remove(){
+declare -A software_list=(
+    ["telnet"]="Telnet server"
+    ["vsftpd"]="FTP server"
+    ["apache2"]="Apache Web Server"
+    ["ncat"]="Netcat"
+    ["nmap"]="Network Mapper"
+    ["hydra"]="Hydra"
+    ["john"]="John the Ripper"
+    ["wireshark"]="Wireshark"
+    ["metasploit-framework"]="Metasploit"
+    ["nginx"]="NGINX"
+    ["samba"]="Samba"
+    ["bind9"]="DNS"
+    ["tftpd"]="TFTPD"
+    ["ftp"]="FTP"
+    ["x11vnc"]="x11VNC"
+    ["tightvncserver"]="Tight VNC"
+    ["nfs-kernel-server"]="NFS"
+    ["snmp"]="SNMP"
+    ["postfix"]="Postfix"
+    ["sendmail"]="Sendmail"
+    ["xinetd"]="Xinetd"
+)
+
+# Ask user about each software and remove if desired
+for software in "${!software_list[@]}"; do
+    if dpkg -l | grep -q "^ii  $software "; then
+        echo "Found ${software_list[$software]}"
+        read -p "Do you want to remove $software? (y/N) " choice
+        case "$choice" in
+            y|Y) 
+                echo "Removing $software..."
+                apt-get purge --auto-remove -y $software
+                ;;
+            *)
+                echo "$software kept."
+                ;;
+        esac
+    fi
+done
+
+echo "Script completed."
+}
+
 
 	logo
 	ufw
@@ -231,5 +282,9 @@ echo "Ubuntu update settings have been hardened."
  	ssh
   	login_config
    	pam
+    	updates_config
+     	shadow
+      	remove
+      
     	
    	
