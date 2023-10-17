@@ -72,10 +72,13 @@ echo "UFW has been enabled."
 }
 
 logo(){
-echo "         //            __      ___      __     		"
-echo "        // //   / / //   ) ) //   ) ) //  ) )       "
-echo "       // //   / / //   / / //   / / //             "
-echo "      // ((___( ( //   / / ((___( ( //              "
+echo "			 ___                                      "
+echo "			/\_ \                                     "
+echo "			\//\ \    __  __    ___      __     _ __  "
+echo "			  \ \ \  /\ \/\ \ /' _ `\  /'__`\  /\`'__\ "
+echo "			   \_\ \_\ \ \_\ \/\ \/\ \/\ \L\.\_\ \ \/ "
+echo "			   /\____\\ \____/\ \_\ \_\ \__/.\_\\ \_\ "
+echo "			    \/____/ \/___/  \/_/\/_/\/__/\/_/ \/_/ "
 }
 
 ssh(){
@@ -271,10 +274,62 @@ for software in "${!software_list[@]}"; do
         esac
     fi
 done
-
-echo "Script completed."
 }
 
+secure_misc(){
+# Harden Apache2
+if dpkg -l | grep -q "^ii  apache2 "; then
+    echo "Hardening Apache2..."
+
+    # Backup the apache2.conf file
+    cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.backup
+
+    # Turn off server tokens
+    sed -i 's/ServerTokens OS/ServerTokens Prod/' /etc/apache2/conf-enabled/security.conf
+
+    # Turn off server signature
+    sed -i 's/ServerSignature On/ServerSignature Off/' /etc/apache2/conf-enabled/security.conf
+
+    # Disable directory listing
+    sed -i 's/Options Indexes FollowSymLinks/Options -Indexes +FollowSymLinks/' /etc/apache2/apache2.conf
+
+    chown -R root:root /etc/apache2
+    chown -R root:root /etc/apache
+    echo \<Directory \> >> /etc/apache2/apache2.conf
+    echo -e ' \t AllowOverride None' >> /etc/apache2/apache2.conf
+    echo -e ' \t Order Deny,Allow' >> /etc/apache2/apache2.conf
+    echo -e ' \t Deny from all' >> /etc/apache2/apache2.conf
+    echo UserDir disabled root >> /etc/apache2/apache2.conf
+
+    # Restart Apache2 to apply changes
+    systemctl restart apache2
+    echo "Apache2 hardened."
+fi
+
+# Harden vsftpd
+if dpkg -l | grep -q "^ii  vsftpd "; then
+    echo "Hardening vsftpd..."
+
+    # Backup the vsftpd.conf file
+    cp /etc/vsftpd.conf /etc/vsftpd.conf.backup
+
+    # Disable anonymous logins
+    echo "anonymous_enable=NO" >> /etc/vsftpd.conf
+
+    # Enable local users
+    echo "local_enable=YES" >> /etc/vsftpd.conf
+
+    # Jail users to their home directory
+    echo "chroot_local_user=YES" >> /etc/vsftpd.conf
+
+    # Prevent write access for anonymous users
+    echo "write_enable=NO" >> /etc/vsftpd.conf
+
+    # Restart vsftpd to apply changes
+    systemctl restart vsftpd
+    echo "vsftpd hardened."
+fi
+}
 
 	logo
 	ufw
@@ -285,6 +340,7 @@ echo "Script completed."
     	updates_config
      	shadow
       	remove
-      
+        secure_misc
+        echo "Script complete. // lunar //"
     	
    	
