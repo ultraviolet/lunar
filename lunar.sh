@@ -196,6 +196,33 @@ echo "password requisite pam_unix.so remember=5" >> /etc/pam.d/common-password
 echo "PAM configurations have been hardened. Original configurations were backed up with .backup extensions."
 }
 
+updates_config(){
+# 1. Ensure the system regularly checks for updates.
+echo "APT::Periodic::Update-Package-Lists \"1\";" > /etc/apt/apt.conf.d/10periodic
+echo "APT::Periodic::Download-Upgradeable-Packages \"1\";" >> /etc/apt/apt.conf.d/10periodic
+echo "APT::Periodic::AutocleanInterval \"7\";" >> /etc/apt/apt.conf.d/10periodic
+
+# 2. Ensure only trusted repositories are used.
+# This is just an example, you might need to customize based on which repositories you trust.
+sed -i '/http:\/\/ppa\.launchpad\.net/d' /etc/apt/sources.list
+sed -i '/http:\/\/archive\.canonical\.com/d' /etc/apt/sources.list
+
+# 3. Automate the installation of security updates.
+sudo apt install -y unattended-upgrades
+
+# Enable automatic updates
+echo 'Unattended-Upgrade::Automatic-Reboot "true";' > /etc/apt/apt.conf.d/50unattended-upgrades
+echo 'Unattended-Upgrade::Automatic-Reboot-Time "02:00";' >> /etc/apt/apt.conf.d/50unattended-upgrades
+
+# 4. Remove unnecessary or deprecated software repositories.
+# As an example, we're removing the CD-ROM source (commonly left in sources.list but rarely used).
+sed -i '/cdrom:/d' /etc/apt/sources.list
+
+# Update package list after making changes.
+sudo apt update
+
+echo "Ubuntu update settings have been hardened."
+}
 
 
 	logo
