@@ -147,7 +147,62 @@ hidden(){
 	done < /etc/passwd
 }
 
+login_config(){
+cp /etc/login.defs /etc/login.defs.backup
+
+# Set password minimum length to 12
+sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN   12/' /etc/login.defs
+
+# Set password maximum age to 60 days
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS   60/' /etc/login.defs
+
+# Set password minimum age to 7 days
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS   7/' /etc/login.defs
+
+# Set password warning age to 7 days
+sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE   7/' /etc/login.defs
+
+# Set maximum number of login retries to 5
+sed -i 's/^LOGIN_RETRIES.*/LOGIN_RETRIES   5/' /etc/login.defs
+
+# Set maximum number of days a password may be left unused
+sed -i 's/^INACTIVE.*/INACTIVE   30/' /etc/login.defs
+
+# Ensure default group for new users is set to users
+sed -i 's/^USERGROUPS_ENAB.*/USERGROUPS_ENAB yes/' /etc/login.defs
+
+# Set default umask for users to 027
+sed -i 's/^UMASK.*/UMASK   027/' /etc/login.defs
+
+echo "login.defs has been secured. Original configuration was backed up to /etc/login.defs.backup"
+}
+
+pam(){
+cp /etc/pam.d/common-auth /etc/pam.d/common-auth.backup
+cp /etc/pam.d/common-password /etc/pam.d/common-password.backup
+
+# Enforce account lockout after failed attempts
+echo "auth required pam_tally2.so onerr=fail audit silent deny=5 unlock_time=900" >> /etc/pam.d/common-auth
+
+# Strengthen password requirements
+echo "password requisite pam_pwquality.so retry=3 minlen=12 difok=7 dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 reject_username maxrepeat=3 maxsequence=3" >> /etc/pam.d/common-password
+
+# Use SHA-512 for password hashing
+sed -i 's/password\s*common\s*pam_unix\.so/password    common    pam_unix.so sha512/' /etc/pam.d/common-password
+
+# Password history enforcement (remember 5 passwords)
+echo "password requisite pam_unix.so remember=5" >> /etc/pam.d/common-password
+
+echo "PAM configurations have been hardened. Original configurations were backed up with .backup extensions."
+}
+
+
+
 	logo
 	ufw
 	users
  	ssh
+  	login_config
+   	pam
+    	
+   	
