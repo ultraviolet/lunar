@@ -87,20 +87,20 @@ ssh(){
                 	then
                         	apt-get autoremove -y --purge openssh-server ssh 
 	         	else
-				sed -i 's/LoginGraceTime .*/LoginGraceTime 60/g' /etc/ssh/sshd_config
-                        	sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
-                        	sed -i 's/Protocol .*/Protocol 2/g' /etc/ssh/sshd_config
-                        	sed -i 's/#PermitEmptyPasswords .*/PermitEmptyPasswords no/g' /etc/ssh/sshd_config
-                        	sed -i 's/PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-                        	sed -i 's/X11Forwarding .*/X11Forwarding no/g' /etc/ssh/sshd_config
-
-							
-							sed -i '$a AllowUsers' /etc/ssh/sshd_config
-							for x in `cat users`
-							do
-								sed -i "/^AllowUser/ s/$/ $x /" /etc/ssh/sshd_config
-							done
-			
+				cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+				sed -i 's/^#*\s*PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*Protocol .*/Protocol 2/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*AllowTcpForwarding .*/AllowTcpForwarding no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*X11Forwarding .*/X11Forwarding no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*LogLevel .*/LogLevel VERBOSE/' /etc/ssh/sshd_config
+				
+				echo "MaxAuthTries 3" >> /etc/ssh/sshd_config
+				echo "MaxSessions 2" >> /etc/ssh/sshd_config
+				echo "LoginGraceTime 60" >> /etc/ssh/sshd_config
                 	fi
         else
                 	read -p "Does SSH need to be installed? [y/n]: " a
@@ -108,19 +108,21 @@ ssh(){
                 	then
                         	apt-get install -y openssh-server ssh
 				wait
-				sed -i 's/LoginGraceTime .*/LoginGraceTime 60/g' /etc/ssh/sshd_config
-                        	sed -i 's/PermitRootLogin .*/PermitRootLogin no/g' /etc/ssh/sshd_config
-                        	sed -i 's/Protocol .*/Protocol 2/g' /etc/ssh/sshd_config
-                        	sed -i 's/#PermitEmptyPasswords .*/PermitEmptyPasswords no/g' /etc/ssh/sshd_config
-                        	sed -i 's/PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-                        	sed -i 's/X11Forwarding .*/X11Forwarding no/g' /etc/ssh/sshd_config
-							
-							sed -i '$a AllowUsers' /etc/ssh/sshd_config
-							for x in `cat users`
-							do
-								sed -i "/^AllowUser/ s/$/ $x /" /etc/ssh/sshd_config
-							done
+				# Harden SSH and create backup
+    				cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+				sed -i 's/^#*\s*PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*UsePAM .*/UsePAM no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*Protocol .*/Protocol 2/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*AllowTcpForwarding .*/AllowTcpForwarding no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*X11Forwarding .*/X11Forwarding no/' /etc/ssh/sshd_config
+				sed -i 's/^#*\s*LogLevel .*/LogLevel VERBOSE/' /etc/ssh/sshd_config
 				
+				echo "MaxAuthTries 3" >> /etc/ssh/sshd_config
+				echo "MaxSessions 2" >> /etc/ssh/sshd_config
+				echo "LoginGraceTime 60" >> /etc/ssh/sshd_config
 			fi
         	fi
 }
