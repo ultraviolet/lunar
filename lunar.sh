@@ -127,6 +127,26 @@ ssh(){
         	fi
 }
 
+hidden(){
+	VALID_SHELLS="/bin/sh /bin/bash /bin/zsh /bin/tcsh /bin/csh"
+
+ 	# Scanning....
+	echo "Potentially hidden users:"
+	
+	# Loop through each line in /etc/passwd
+	while IFS=: read -r username _ uid _ _ _ user_shell; do
+	    # Check if UID is below 1000 and the shell is valid
+	    if [[ $uid -lt 1000 ]] && [[ $VALID_SHELLS =~ $user_shell ]]; then
+	        echo "$username (UID: $uid, Shell: $user_shell)"
+	    fi
+	done < /etc/passwd
+
+ 	echo "All Users:"
+  	while IFS=: read -r username _ uid _ _ _ user_shell; do
+	        echo "$username (UID: $uid, Shell: $user_shell)"
+	done < /etc/passwd
+}
+
 	logo
 	ufw
 	users
