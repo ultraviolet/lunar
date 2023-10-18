@@ -334,7 +334,6 @@ fi
 	users
  	ssh
   	login_config
-   	pam
     	updates_config
      	shadow
       	remove
