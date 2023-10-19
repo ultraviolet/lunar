@@ -66,9 +66,20 @@ done
 ufw(){
 sudo apt update
 sudo apt install -y ufw
+sudo ufw default deny incoming
 sudo ufw enable
 sudo ufw status
 echo "UFW has been enabled."
+# ufw reset
+
+# # Deny all incoming and outgoing traffic by default
+# ufw default deny incoming
+# ufw default deny outgoing
+
+# # Allow necessary outgoing traffic (for example, for DNS, HTTP, and HTTPS)
+# ufw allow out 53/udp  # DNS
+# ufw allow out 80/tcp  # HTTP
+# ufw allow out 443/tcp # HTTPS
 }
 
 
@@ -175,6 +186,9 @@ sed -i 's/^USERGROUPS_ENAB.*/USERGROUPS_ENAB yes/' /etc/login.defs
 # Set default umask for users to 027
 sed -i 's/^UMASK.*/UMASK   027/' /etc/login.defs
 
+# Change encryption to SHA512
+sed -i 's/^\(ENCRYPT_METHOD\s*\).*$/\1 SHA512/' /etc/login.defs
+
 echo "login.defs has been secured. Original configuration was backed up to /etc/login.defs.backup"
 }
 
@@ -254,6 +268,9 @@ declare -A software_list=(
     ["postfix"]="Postfix"
     ["sendmail"]="Sendmail"
     ["xinetd"]="Xinetd"
+    ["ophcrack"]="Ophcrack"
+    ["snort"]="Snort"
+    
 )
 
 # Ask user about each software and remove if desired
@@ -293,11 +310,11 @@ if dpkg -l | grep -q "^ii  apache2 "; then
 
     chown -R root:root /etc/apache2
     chown -R root:root /etc/apache
-    echo \<Directory \> >> /etc/apache2/apache2.conf
+    echo "\<Directory \>" >> /etc/apache2/apache2.conf
     echo -e ' \t AllowOverride None' >> /etc/apache2/apache2.conf
     echo -e ' \t Order Deny,Allow' >> /etc/apache2/apache2.conf
     echo -e ' \t Deny from all' >> /etc/apache2/apache2.conf
-    echo UserDir disabled root >> /etc/apache2/apache2.conf
+    echo "UserDir disabled root" >> /etc/apache2/apache2.conf
 
     # Restart Apache2 to apply changes
     systemctl restart apache2
@@ -326,7 +343,80 @@ if dpkg -l | grep -q "^ii  vsftpd "; then
     # Restart vsftpd to apply changes
     systemctl restart vsftpd
     echo "vsftpd hardened."
+
+    sudo gsettings set org.gnome.desktop.session idle-delay 240
+    sudo gsettings get org.gnome.desktop.screensaver lock-enabled true
+    echo "Secured idle delay and screensaver lock."
+    
 fi
+}
+
+sysctl(){
+cp /etc/sysctl.conf /etc/sysctl.conf.backup
+
+# Define security settings
+declare -A settings
+
+settings["net.ipv4.conf.default.rp_filter"]="1"
+settings["net.ipv4.conf.all.rp_filter"]="1"
+settings["net.ipv4.tcp_syncookies"]="1"
+settings["net.ipv4.conf.all.accept_redirects"]="0"
+settings["net.ipv6.conf.all.accept_redirects"]="0"
+settings["net.ipv4.conf.all.send_redirects"]="0"
+settings["net.ipv4.conf.all.accept_source_route"]="0"
+settings["net.ipv6.conf.all.accept_source_route"]="0"
+settings["net.ipv4.conf.all.log_martians"]="1"
+settings["fs.file-max"]="65535"
+settings["net.ipv4.tcp_tw_recycle"]="0"
+settings["net.ipv4.tcp_tw_reuse"]="1"
+settings["net.ipv4.ip_forward"]="0"       # Disable IPv4 forwarding
+settings["net.ipv6.conf.all.forwarding"]="0"
+
+
+# Replace or add settings in sysctl.conf
+for key in "${!settings[@]}"; do
+    # Remove the existing setting if it's there
+    sed -i "/^${key}=/d" /etc/sysctl.conf
+    # Append the new setting
+    echo "${key}=${settings[$key]}" >> /etc/sysctl.conf
+done
+
+# Reload sysctl settings
+sysctl -p
+}
+pwquality(){
+
+PWQUALITY_CONF_PATH="/etc/security/pwquality.conf"
+# Change settings to be more secure
+sed -i 's/^\(minlen\s*=\s*\).*$/\1 12/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(dcredit\s*=\s*\).*$/\1 -1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(ucredit\s*=\s*\).*$/\1 -1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(ocredit\s*=\s*\).*$/\1 -1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(lcredit\s*=\s*\).*$/\1 -1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(maxrepeat\s*=\s*\).*$/\1 3/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(maxclassrepeat\s*=\s*\).*$/\1 3/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(gecoscheck\s*=\s*\).*$/\1 1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(dictpath\s*=\s*\).*$/\1 \/usr\/share\/dict\/words/' $PWQUALITY_CONF_PATH
+
+# If a setting does not exist in the file, append it
+grep -q "^minlen" $PWQUALITY_CONF_PATH || echo "minlen = 12" >> $PWQUALITY_CONF_PATH
+grep -q "^dcredit" $PWQUALITY_CONF_PATH || echo "dcredit = -1" >> $PWQUALITY_CONF_PATH
+grep -q "^ucredit" $PWQUALITY_CONF_PATH || echo "ucredit = -1" >> $PWQUALITY_CONF_PATH
+grep -q "^ocredit" $PWQUALITY_CONF_PATH || echo "ocredit = -1" >> $PWQUALITY_CONF_PATH
+grep -q "^lcredit" $PWQUALITY_CONF_PATH || echo "lcredit = -1" >> $PWQUALITY_CONF_PATH
+grep -q "^maxrepeat" $PWQUALITY_CONF_PATH || echo "maxrepeat = 3" >> $PWQUALITY_CONF_PATH
+grep -q "^maxclassrepeat" $PWQUALITY_CONF_PATH || echo "maxclassrepeat = 3" >> $PWQUALITY_CONF_PATH
+grep -q "^gecoscheck" $PWQUALITY_CONF_PATH || echo "gecoscheck = 1" >> $PWQUALITY_CONF_PATH
+grep -q "^dictpath" $PWQUALITY_CONF_PATH || echo "dictpath = /usr/share/dict/words" >> $PWQUALITY_CONF_PATH
+
+# Set the file permissions so that only root can read and write
+chmod 600 $PWQUALITY_CONF_PATH
+
+echo "pwquality.conf has been updated and secured."
+}
+
+grub(){
+
 }
 
 	logo
@@ -337,7 +427,9 @@ fi
     	updates_config
      	shadow
       	remove
+       	sysctl
         secure_misc
+	pwquality
         echo "Script complete. // lunar //"
     	
    	
