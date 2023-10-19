@@ -345,7 +345,7 @@ if dpkg -l | grep -q "^ii  vsftpd "; then
     echo "vsftpd hardened."
 
     sudo gsettings set org.gnome.desktop.session idle-delay 240
-    sudo gsettings get org.gnome.desktop.screensaver lock-enabled true
+    sudo gsettings set org.gnome.desktop.screensaver lock-enabled true
     echo "Secured idle delay and screensaver lock."
     
 fi
@@ -382,7 +382,7 @@ for key in "${!settings[@]}"; do
 done
 
 # Reload sysctl settings
-sysctl -p
+command sysctl -p
 }
 pwquality(){
 
@@ -397,6 +397,8 @@ sed -i 's/^\(maxrepeat\s*=\s*\).*$/\1 3/' $PWQUALITY_CONF_PATH
 sed -i 's/^\(maxclassrepeat\s*=\s*\).*$/\1 3/' $PWQUALITY_CONF_PATH
 sed -i 's/^\(gecoscheck\s*=\s*\).*$/\1 1/' $PWQUALITY_CONF_PATH
 sed -i 's/^\(dictpath\s*=\s*\).*$/\1 \/usr\/share\/dict\/words/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(dictcheck\s*=\s*\).*$/\1 1/' $PWQUALITY_CONF_PATH
+sed -i 's/^\(usercheck\s*=\s*\).*$/\1 1/' $PWQUALITY_CONF_PATH
 
 # If a setting does not exist in the file, append it
 grep -q "^minlen" $PWQUALITY_CONF_PATH || echo "minlen = 12" >> $PWQUALITY_CONF_PATH
@@ -408,6 +410,8 @@ grep -q "^maxrepeat" $PWQUALITY_CONF_PATH || echo "maxrepeat = 3" >> $PWQUALITY_
 grep -q "^maxclassrepeat" $PWQUALITY_CONF_PATH || echo "maxclassrepeat = 3" >> $PWQUALITY_CONF_PATH
 grep -q "^gecoscheck" $PWQUALITY_CONF_PATH || echo "gecoscheck = 1" >> $PWQUALITY_CONF_PATH
 grep -q "^dictpath" $PWQUALITY_CONF_PATH || echo "dictpath = /usr/share/dict/words" >> $PWQUALITY_CONF_PATH
+grep -q "^dictcheck" $PWQUALITY_CONF_PATH || echo "dictcheck = 1" >> $PWQUALITY_CONF_PATH
+grep -q "^usercheck" $PWQUALITY_CONF_PATH || echo "usercheck = 1" >> $PWQUALITY_CONF_PATH
 
 # Set the file permissions so that only root can read and write
 chmod 600 $PWQUALITY_CONF_PATH
@@ -415,8 +419,9 @@ chmod 600 $PWQUALITY_CONF_PATH
 echo "pwquality.conf has been updated and secured."
 }
 
-grub(){
-
+next(){
+echo "TODO - remove prohibited files, chown anything not configured, check groups, add missing users, /etc/gdm3/custom.conf , lock root, configure UFW app profiles, start/restart services, /etc/sudoers rules"
+echo "recheck previous configs, firefox, update system, configure pam"
 }
 
 	logo
